@@ -1,0 +1,1236 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="East & Law: Premier international law firm offering expert legal services in English, Russian, Uzbek, and Chinese">
+    <title>East & Law</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #000;
+            background: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        header {
+            background: linear-gradient(to right, #0a0a0a, #1c1c1c);
+            color: #fff;
+            padding: 15px 20px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .logo {
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .nav-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #fff;
+            transition: transform 0.3s ease;
+        }
+        .nav-toggle:hover {
+            transform: scale(1.1);
+        }
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+        }
+        .nav-menu ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            bottom: -4px;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+        .nav-menu a:hover::after {
+            width: 100%;
+        }
+        .nav-menu a:hover {
+            color: #e0e0e0;
+        }
+        .language-select {
+            background: none;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 20px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            transition: border-color 0.3s ease;
+        }
+        .language-select:focus {
+            border-color: #e0e0e0;
+            outline: none;
+        }
+        .language-select option {
+            background: #1c1c1c;
+            color: #fff;
+        }
+        section {
+            padding: 100px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+        .parallax {
+            background: url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            filter: grayscale(100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        h2 {
+            font-family: 'Lora', serif;
+            font-size: 36px;
+            margin-bottom: 20px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background: #000;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        p {
+            font-size: 16px;
+            max-width: 800px;
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        img {
+            filter: grayscale(100%);
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 15px 0;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .lang-en, .lang-ru, .lang-uz, .lang-zh {
+            display: none;
+        }
+        body.en .lang-en, body.ru .lang-ru, body.uz .lang-uz, body.zh .lang-zh {
+            display: block;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(to right, #000, #2a2a2a);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 25px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .cta-button:hover {
+            background: linear-gradient(to right, #2a2a2a, #000);
+            transform: translateY(-3px);
+        }
+        .fixed-cta {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: linear-gradient(to right, #000, #2a2a2a);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .fixed-cta:hover {
+            transform: translateY(-3px);
+        }
+        .case-card, .service-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px;
+            max-width: 340px;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        .case-card:hover, .service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .case-card img, .service-card img {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .case-card h3, .service-card h3 {
+            font-family: 'Lora', serif;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .case-grid, .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .quote {
+            font-style: italic;
+            font-size: 18px;
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 15px;
+            border-left: 3px solid #000;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .people-section {
+            padding: 50px 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .filter-container input, .filter-container select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .filter-container input:focus, .filter-container select:focus {
+            border-color: #00aaff;
+            outline: none;
+        }
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .person-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .person-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .person-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .person-info h3 {
+            font-family: 'Lora', serif;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .person-info p {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+        }
+        .person-info .contact-links a {
+            color: #000;
+            margin-right: 8px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .person-info .contact-links a:hover {
+            color: #00aaff;
+        }
+        .results-info {
+            margin: 15px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .results-info span {
+            margin: 0 8px;
+        }
+        .results-info a {
+            color: #000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .results-info a:hover {
+            color: #00aaff;
+        }
+        .warning {
+            max-width: 700px;
+            margin: 30px auto;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .chatbot {
+            position: fixed;
+            bottom: 15px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .chatbot-toggle {
+            background: linear-gradient(to right, #000, #2a2a2a);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+        }
+        .chatbot-window {
+            display: none;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            padding: 20px;
+        }
+        .chatbot-window.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        .chatbot-header {
+            font-family: 'Lora', serif;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .chatbot-question {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .chatbot-question:hover {
+            background: #e0e0e0;
+        }
+        .chatbot-answer {
+            display: none;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #000;
+            background: #fafafa;
+            border-radius: 6px;
+        }
+        .chatbot-answer.active {
+            display: block;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        footer {
+            background: #1c1c1c;
+            color: #fff;
+            padding: 15px 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        .social-media {
+            margin-bottom: 15px;
+        }
+        .social-media a {
+            color: #fff;
+            margin: 0 10px;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+        .social-media a:hover {
+            color: #e0e0e0;
+        }
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+            transition: color 0.3s ease;
+        }
+        .footer-links a:hover {
+            color: #fff;
+        }
+        .footer-copyright {
+            font-size: 11px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+                width: 100%;
+                background: #1c1c1c;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                flex-direction: column;
+                padding: 15px 0;
+            }
+            .nav-menu.active {
+                display: flex;
+            }
+            .nav-menu ul {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .nav-toggle {
+                display: block;
+            }
+            .language-select {
+                width: 100px;
+                margin-top: 10px;
+            }
+            section, .people-section {
+                padding: 70px 15px;
+            }
+            .parallax {
+                background-attachment: scroll;
+            }
+            h2 {
+                font-size: 28px;
+            }
+            p {
+                font-size: 14px;
+            }
+            .fixed-cta {
+                bottom: 70px;
+                right: 15px;
+            }
+            .chatbot-window {
+                width: 250px;
+                max-height: 350px;
+            }
+            .case-card, .service-card {
+                margin: 10px;
+                max-width: 300px;
+            }
+            .person-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .person-card img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+            .cta-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            .fixed-cta {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+            .chatbot-toggle {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .chatbot-window {
+                width: 220px;
+                max-height: 300px;
+            }
+            .filter-container input, .filter-container select {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body class="en">
+    <header>
+        <div class="logo">East & Law</div>
+        <div class="nav-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+        <div class="nav-menu" id="navMenu">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#cases">Cases</a></li>
+                <li><a href="#people">People</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+        <select class="language-select" onchange="setLanguage(this.value)">
+            <option value="en">EN</option>
+            <option value="ru">RU</option>
+            <option value="uz">UZ</option>
+            <option value="zh">ZH</option>
+        </select>
+    </header>
+    <section id="home">
+        <div class="parallax"></div>
+        <div class="lang-en">
+            <h2>Unrivaled Legal Expertise</h2>
+            <p>East & Law delivers world-class legal solutions for global clients, blending Eastern insight with international excellence.</p>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Law Firm Office">
+            <a href="#contact" class="cta-button">Connect with Us</a>
+        </div>
+        <div class="lang-ru">
+            <h2>Непревзойденная юридическая экспертиза</h2>
+            <p>Восток и Право предоставляет юридические решения мирового уровня, сочетая восточную проницательность с международным превосходством.</p>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Офис юридической фирмы">
+            <a href="#contact" class="cta-button">Связаться с нами</a>
+        </div>
+        <div class="lang-uz">
+            <h2>Tengsiz yuridik tajriba</h2>
+            <p>Sharq va Huquq sharqiy idrokni xalqaro mukammallik bilan birlashtirib, global mijozlar uchun jahon darajasidagi yuridik yechimlar taqdim etadi.</p>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Yuridik firma ofisi">
+            <a href="#contact" class="cta-button">Biz bilan bog'laning</a>
+        </div>
+        <div class="lang-zh">
+            <h2>无与伦比的法律专长</h2>
+            <p>东与法为全球客户提供世界级的法律解决方案，融合东方洞察力与国际卓越性。</p>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="律师事务所办公室">
+            <a href="#contact" class="cta-button">联系我们</a>
+        </div>
+    </section>
+    <section id="about">
+        <div class="parallax"></div>
+        <div class="lang-en">
+            <h2>About East & Law</h2>
+            <p>A premier international law firm specializing in corporate law, arbitration, and strategic legal consulting, with a focus on bridging Eastern and Western markets.</p>
+            <div class="quote">"Our mission is to deliver seamless legal solutions that empower global businesses." – Managing Partner</div>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Our Team">
+        </div>
+        <div class="lang-ru">
+            <h2>О Восток и Право</h2>
+            <p>Ведущая международная юридическая фирма, специализирующаяся на корпоративном праве, арбитраже и стратегическом юридическом консультировании, с акцентом на объединение восточных и западных рынков.</p>
+            <div class="quote">"Наша миссия – предоставлять безупречные юридические решения, которые расширяют возможности глобального бизнеса." – Управляющий партнер</div>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Наша команда">
+        </div>
+        <div class="lang-uz">
+            <h2>Sharq va Huquq haqida</h2>
+            <p>Korporativ huquq, arbitraj va strategik yuridik maslahatlarga ixtisoslashgan, sharqiy va g'arbiy bozorlarni birlashtirishga e'tibor qaratgan yetakchi xalqaro yuridik firma.</p>
+            <div class="quote">"Bizning vazifamiz global biznes imkoniyatlarini kengaytiradigan mukammal yuridik yechimlarni taqdim etishdir." – Boshqaruvchi sherik</div>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bizning jamoa">
+        </div>
+        <div class="lang-zh">
+            <h2>关于东与法</h2>
+            <p>一家领先的国际律师事务所，专注于公司法、仲裁和战略法律咨询，致力于连接东西方市场。</p>
+            <div class="quote">"我们的使命是为全球企业提供无缝的法律解决方案。" – 管理合伙人</div>
+            <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="我们的团队">
+        </div>
+    </section>
+    <section id="services">
+        <div class="parallax"></div>
+        <div class="lang-en">
+            <h2>Our Expertise</h2>
+            <p>Comprehensive legal services tailored for global enterprises, from governance to dispute resolution.</p>
+            <div class="service-grid">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Corporate Law">
+                    <h3>Corporate Law</h3>
+                    <p>Structuring and advising on multinational corporate transactions.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Arbitration">
+                    <h3>Arbitration</h3>
+                    <p>Resolving complex international disputes with precision.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Consulting">
+                    <h3>Legal Consulting</h3>
+                    <p>Strategic guidance for cross-border investments.</p>
+                </div>
+            </div>
+        </div>
+        <div class="lang-ru">
+            <h2>Наша экспертиза</h2>
+            <p>Комплексные юридические услуги, адаптированные для глобальных предприятий, от управления до разрешения споров.</p>
+            <div class="service-grid">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Корпоративное право">
+                    <h3>Корпоративное право</h3>
+                    <p>Структурирование и консультирование по многонациональным корпоративным сделкам.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Арбитраж">
+                    <h3>Арбитраж</h3>
+                    <p>Разрешение сложных международных споров с точностью.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Консультации">
+                    <h3>Юридические консультации</h3>
+                    <p>Стратегическое руководство для трансграничных инвестиций.</p>
+                </div>
+            </div>
+        </div>
+        <div class="lang-uz">
+            <h2>Bizning tajribamiz</h2>
+            <p>Boshqaruvdan nizolarni hal qilishgacha global korxonalar uchun moslashtirilgan keng qamrovli yuridik xizmatlar.</p>
+            <div class="service-grid">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Korporativ huquq">
+                    <h3>Korporativ huquq</h3>
+                    <p>Ko'p millatli korporativ bitimlarni tuzish va maslahat berish.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Arbitraj">
+                    <h3>Arbitraj</h3>
+                    <p>Murakkab xalqaro nizolarni aniqlik bilan hal qilish.</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Maslahat">
+                    <h3>Yuridik maslahat</h3>
+                    <p>Transchegaraviy investitsiyalar uchun strategik yo'l-yo'riq.</p>
+                </div>
+            </div>
+        </div>
+        <div class="lang-zh">
+            <h2>我们的专长</h2>
+            <p>为全球企业量身定制的全面法律服务，从治理到争议解决。</p>
+            <div class="service-grid">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="公司法">
+                    <h3>公司法</h3>
+                    <p>为跨国公司交易提供结构化建议。</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="仲裁">
+                    <h3>仲裁</h3>
+                    <p>以精准的方式解决复杂的国际争端。</p>
+                </div>
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="咨询">
+                    <h3>法律咨询</h3>
+                    <p>为跨境投资提供战略指导。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="cases">
+        <div class="parallax"></div>
+        <div class="lang-en">
+            <h2>Global Success Stories</h2>
+            <p>Discover our landmark international legal projects that showcase our expertise.</p>
+            <div class="case-grid">
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Merger Case">
+                    <h3>Tech Merger</h3>
+                    <p>Orchestrated a $2.5B merger between a European tech leader and an Asian innovator, navigating complex regulatory landscapes.</p>
+                    <a href="#" class="cta-button">Learn More</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Arbitration Case">
+                    <h3>Energy Arbitration</h3>
+                    <p>Secured a $600M settlement in a high-stakes arbitration for a multinational energy conglomerate.</p>
+                    <a href="#" class="cta-button">Learn More</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Trade Case">
+                    <h3>Trade Agreement</h3>
+                    <p>Advised on a $2B trade deal spanning Asia, Europe, and North America, ensuring compliance across jurisdictions.</p>
+                    <a href="#" class="cta-button">Learn More</a>
+                </div>
+            </div>
+        </div>
+        <div class="lang-ru">
+            <h2>Глобальные истории успеха</h2>
+            <p>Ознакомьтесь с нашими знаковыми международными юридическими проектами, демонстрирующими нашу экспертизу.</p>
+            <div class="case-grid">
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Слияние">
+                    <h3>Технологическое слияние</h3>
+                    <p>Организовали слияние на $2.5 млрд между европейским технологическим лидером и азиатским инноватором, преодолев сложные регуляторные барьеры.</p>
+                    <a href="#" class="cta-button">Узнать больше</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Арбитраж">
+                    <h3>Энергетический арбитраж</h3>
+                    <p>Обеспечили урегулирование на $600 млн в арбитраже с высокими ставками для многонационального энергетического конгломерата.</p>
+                    <a href="#" class="cta-button">Узнать больше</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Торговая сделка">
+                    <h3>Торговая сделка</h3>
+                    <p>Консультировали по торговой сделке на $2 млрд, охватывающей Азию, Европу и Северную Америку, обеспечивая соблюдение юрисдикций.</p>
+                    <a href="#" class="cta-button">Узнать больше</a>
+                </div>
+            </div>
+        </div>
+        <div class="lang-uz">
+            <h2>Global muvaffaqiyat hikoyalari</h2>
+            <p>Bizning tajribamizni namoyish etuvchi muhim xalqaro yuridik loyihalarimiz bilan tanishing.</p>
+            <div class="case-grid">
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Birgalik">
+                    <h3>Texnologik birlashma</h3>
+                    <p>Yevropaning texnologik yetakchisi va Osiyo innovatori o'rtasidagi $2.5 mlrd birlashmani tashkil qildik, murakkab tartibga solish to'siqlarini yengib o'tdik.</p>
+                    <a href="#" class="cta-button">Batafsil</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Arbitraj">
+                    <h3>Energetika arbitraji</h3>
+                    <p>Ko'p millatli energetika konglomerati uchun yuqori stavkali arbitrajda $600 mln kelishuvni ta'minladik.</p>
+                    <a href="#" class="cta-button">Batafsil</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Savdo bitimi">
+                    <h3>Savdo bitimi</h3>
+                    <p>Osiyo, Yevropa va Shimoliy Amerikani qamrab olgan $2 mlrd savdo shartnomasi bo'yicha maslahat berdik, yurisdiksiyalarga rioya qilishni ta'minladik.</p>
+                    <a href="#" class="cta-button">Batafsil</a>
+                </div>
+            </div>
+        </div>
+        <div class="lang-zh">
+            <h2>全球成功案例</h2>
+            <p>探索我们展示专业知识的标志性国际法律项目。</p>
+            <div class="case-grid">
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="合并案例">
+                    <h3>科技合并</h3>
+                    <p>协调了一家欧洲科技领导者与亚洲创新者之间的25亿美元合并，成功应对复杂的监管环境。</p>
+                    <a href="#" class="cta-button">了解更多</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="仲裁案例">
+                    <h3>能源仲裁</h3>
+                    <p>为一家跨国能源集团在高风险仲裁中获得6亿美元和解。</p>
+                    <a href="#" class="cta-button">了解更多</a>
+                </div>
+                <div class="case-card">
+                    <img src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="贸易案例">
+                    <h3>贸易协议</h3>
+                    <p>为横跨亚洲、欧洲和北美的20亿美元贸易交易提供建议，确保跨司法管辖区的合规性。</p>
+                    <a href="#" class="cta-button">了解更多</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="people" class="people-section">
+        <div class="lang-en">
+            <h2>Our People</h2>
+            <p>East & Law lawyers are recognized for their legal innovation and outstanding service to clients worldwide.</p>
+            <div class="filter-container">
+                <input type="text" placeholder="Tuhtamirzaev Shokhjakhon" onkeyup="filterPeople()" id="searchInput">
+                <select onchange="filterPeople()" id="serviceFilter">
+                    <option value="">Service</option>
+                    <option value="corporate">Corporate Law</option>
+                    <option value="arbitration">Arbitration</option>
+                    <option value="consulting">Legal Consulting</option>
+                </select>
+                <select onchange="filterPeople()" id="roleFilter">
+                    <option value="">Role</option>
+                    <option value="partner">Partner</option>
+                    <option value="associate">Associate</option>
+                </select>
+                <select onchange="filterPeople()" id="locationFilter">
+                    <option value="">Location</option>
+                    <option value="hamburg">Hamburg</option>
+                    <option value="london">London</option>
+                    <option value="tashkent">Tashkent</option>
+                </select>
+                <select onchange="filterPeople()" id="languageFilter">
+                    <option value="">Language</option>
+                    <option value="english">English</option>
+                    <option value="russian">Russian</option>
+                    <option value="uzbek">Uzbek</option>
+                    <option value="chinese">Chinese</option>
+                </select>
+            </div>
+            <div class="results-info" id="resultsInfo">1 results <span>|</span> <a href="#" onclick="sortResults('relevance')">Relevance</a> <span>|</span> <a href="#" onclick="sortResults('alphabetical')">Alphabetical</a></div>
+            <div class="people-grid" id="peopleGrid">
+                <div class="person-card" data-service="consulting" data-role="partner" data-location="tashkent" data-language="uzbek">
+                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Tuhtamirzaev Shokhjakhon">
+                    <div class="person-info">
+                        <h3>Tuhtamirzaev Shokhjakhon</h3>
+                        <p>International Lawyer, Tashkent</p>
+                        <div class="contact-links">
+                            <a href="tel:+998901234567"><i class="fas fa-phone"></i></a>
+                            <a href="mailto:shokhjakhon.tuhtamirzaev@eastandlaw.com"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="warning">
+                Please be cautious if you are approached by a East & Law lawyer through any means other than an email from our official domain: @eastandlaw.com. Cybercriminals have been known to impersonate professionals through faked domain names and other platforms, such as WhatsApp and SMS, etc. If you are uncertain about the legitimacy of a communication claiming to be from or related to our firm, please verify it by <a href="#contact">contacting us</a>.
+            </div>
+        </div>
+        <div class="lang-ru">
+            <h2>Наши люди</h2>
+            <p>Юристы Восток и Право признаны за их юридические инновации и выдающееся обслуживание клиентов по всему миру.</p>
+            <div class="filter-container">
+                <input type="text" placeholder="Тухтамирзаев Шохджахон" onkeyup="filterPeople()" id="searchInput">
+                <select onchange="filterPeople()" id="serviceFilter">
+                    <option value="">Услуга</option>
+                    <option value="corporate">Корпоративное право</option>
+                    <option value="arbitration">Арбитраж</option>
+                    <option value="consulting">Юридические консультации</option>
+                </select>
+                <select onchange="filterPeople()" id="roleFilter">
+                    <option value="">Роль</option>
+                    <option value="partner">Партнер</option>
+                    <option value="associate">Ассоциат</option>
+                </select>
+                <select onchange="filterPeople()" id="locationFilter">
+                    <option value="">Местоположение</option>
+                    <option value="hamburg">Гамбург</option>
+                    <option value="london">Лондон</option>
+                    <option value="tashkent">Ташкент</option>
+                </select>
+                <select onchange="filterPeople()" id="languageFilter">
+                    <option value="">Язык</option>
+                    <option value="english">Английский</option>
+                    <option value="russian">Русский</option>
+                    <option value="uzbek">Узбекский</option>
+                    <option value="chinese">Китайский</option>
+                </select>
+            </div>
+            <div class="results-info" id="resultsInfo">1 результат <span>|</span> <a href="#" onclick="sortResults('relevance')">Релевантность</a> <span>|</span> <a href="#" onclick="sortResults('alphabetical')">Алфавитный</a></div>
+            <div class="people-grid" id="peopleGrid">
+                <div class="person-card" data-service="consulting" data-role="partner" data-location="tashkent" data-language="uzbek">
+                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Тухтамирзаев Шохджахон">
+                    <div class="person-info">
+                        <h3>Тухтамирзаев Шохджахон</h3>
+                        <p>Международный юрист, Ташкент</p>
+                        <div class="contact-links">
+                            <a href="tel:+998901234567"><i class="fas fa-phone"></i></a>
+                            <a href="mailto:shokhjakhon.tuhtamirzaev@eastandlaw.com"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="warning">
+                Пожалуйста, будьте осторожны, если к вам обращается юрист Восток и Право через любые средства, кроме электронной почты с нашего официального домена: @eastandlaw.com. Киберпреступники известны тем, что выдают себя за профессионалов через поддельные доменные имена и другие платформы, такие как WhatsApp и SMS, и т.д. Если вы не уверены в легитимности сообщения, которое якобы исходит от нашей фирмы или связано с ней, пожалуйста, проверьте это, <a href="#contact">связавшись с нами</a>.
+            </div>
+        </div>
+        <div class="lang-uz">
+            <h2>Bizning odamlar</h2>
+            <p>Sharq va Huquq advokatlari o'zlarining yuridik innovatsiyalari va dunyo bo'ylab mijozlarga ajoyib xizmat ko'rsatishi bilan tan olingan.</p>
+            <div class="filter-container">
+                <input type="text" placeholder="Tuhtamirzaev Shokhjakhon" onkeyup="filterPeople()" id="searchInput">
+                <select onchange="filterPeople()" id="serviceFilter">
+                    <option value="">Xizmat</option>
+                    <option value="corporate">Korporativ huquq</option>
+                    <option value="arbitration">Arbitraj</option>
+                    <option value="consulting">Yuridik maslahat</option>
+                </select>
+                <select onchange="filterPeople()" id="roleFilter">
+                    <option value="">Rol</option>
+                    <option value="partner">Sherik</option>
+                    <option value="associate">Hamkor</option>
+                </select>
+                <select onchange="filterPeople()" id="locationFilter">
+                    <option value="">Joylashuv</option>
+                    <option value="hamburg">Hamburg</option>
+                    <option value="london">London</option>
+                    <option value="tashkent">Toshkent</option>
+                </select>
+                <select onchange="filterPeople()" id="languageFilter">
+                    <option value="">Til</option>
+                    <option value="english">Inglizcha</option>
+                    <option value="russian">Ruscha</option>
+                    <option value="uzbek">O'zbekcha</option>
+                    <option value="chinese">Xitoycha</option>
+                </select>
+            </div>
+            <div class="results-info" id="resultsInfo">1 natija <span>|</span> <a href="#" onclick="sortResults('relevance')">Aloqadorlik</a> <span>|</span> <a href="#" onclick="sortResults('alphabetical')">Alifbo tartibida</a></div>
+            <div class="people-grid" id="peopleGrid">
+                <div class="person-card" data-service="consulting" data-role="partner" data-location="tashkent" data-language="uzbek">
+                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Tuhtamirzaev Shokhjakhon">
+                    <div class="person-info">
+                        <h3>Tuhtamirzaev Shokhjakhon</h3>
+                        <p>Xalqaro advokat, Toshkent</p>
+                        <div class="contact-links">
+                            <a href="tel:+998901234567"><i class="fas fa-phone"></i></a>
+                            <a href="mailto:shokhjakhon.tuhtamirzaev@eastandlaw.com"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="warning">
+                Agar sizga East & Law advokati rasmiy domenimizdan: @eastandlaw.com dan boshqa har qanday usul orqali murojaat qilsa, ehtiyot bo'ling. Kiberjinoyatchilar soxta domen nomlari va boshqa platformalar, masalan, WhatsApp va SMS orqali o'zlarini mutaxassislar sifatida ko'rsatishlari ma'lum. Agar siz bizning firmamizdan yoki u bilan bog'liq deb da'vo qilinadigan xabarning haqiqiyligiga shubha qilsangiz, iltimos, <a href="#contact">biz bilan bog'lanib</a> tekshiring.
+            </div>
+        </div>
+        <div class="lang-zh">
+            <h2>我们的人员</h2>
+            <p>东与法律师因其法律创新和为全球客户提供出色服务而受到认可。</p>
+            <div class="filter-container">
+                <input type="text" placeholder="图赫塔米尔扎耶夫·肖赫贾洪" onkeyup="filterPeople()" id="searchInput">
+                <select onchange="filterPeople()" id="serviceFilter">
+                    <option value="">服务</option>
+                    <option value="corporate">公司法</option>
+                    <option value="arbitration">仲裁</option>
+                    <option value="consulting">法律咨询</option>
+                </select>
+                <select onchange="filterPeople()" id="roleFilter">
+                    <option value="">角色</option>
+                    <option value="partner">合伙人</option>
+                    <option value="associate">助理</option>
+                </select>
+                <select onchange="filterPeople()" id="locationFilter">
+                    <option value="">地点</option>
+                    <option value="hamburg">汉堡</option>
+                    <option value="london">伦敦</option>
+                    <option value="tashkent">塔什干</option>
+                </select>
+                <select onchange="filterPeople()" id="languageFilter">
+                    <option value="">语言</option>
+                    <option value="english">英语</option>
+                    <option value="russian">俄语</option>
+                    <option value="uzbek">乌兹别克语</option>
+                    <option value="chinese">中文</option>
+                </select>
+            </div>
+            <div class="results-info" id="resultsInfo">1 结果 <span>|</span> <a href="#" onclick="sortResults('relevance')">相关性</a> <span>|</span> <a href="#" onclick="sortResults('alphabetical')">按字母顺序</a></div>
+            <div class="people-grid" id="peopleGrid">
+                <div class="person-card" data-service="consulting" data-role="partner" data-location="tashkent" data-language="uzbek">
+                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="图赫塔米尔扎耶夫·肖赫贾洪">
+                    <div class="person-info">
+                        <h3>图赫塔米尔扎耶夫·肖赫贾洪</h3>
+                        <p>国际律师，塔什干</p>
+                        <div class="contact-links">
+                            <a href="tel:+998901234567"><i class="fas fa-phone"></i></a>
+                            <a href="mailto:shokhjakhon.tuhtamirzaev@eastandlaw.com"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="warning">
+                如果您通过除我们官方域名 @eastandlaw.com 以外的任何方式被东与法律师接触，请保持警惕。网络犯罪分子通过伪造域名和其他平台（如 WhatsApp 和 SMS 等）冒充专业人士的情况已为人所知。如果您对声称来自我们公司或与其相关的通信的真实性不确定，请通过 <a href="#contact">联系我们</a> 进行验证。
+            </div>
+        </div>
+    </section>
+    <section id="contact">
+        <div class="parallax"></div>
+        <div class="lang-en">
+            <h2>Contact Us</h2>
+            <p><i class="fas fa-envelope"></i> Email: contact@eastandlaw.com | <i class="fas fa-phone"></i> Phone: +1 234 567 890</p>
+            <a href="mailto:contact@eastandlaw.com" class="cta-button">Send a Message</a>
+        </div>
+        <div class="lang-ru">
+            <h2>Свяжитесь с нами</h2>
+            <p><i class="fas fa-envelope"></i> Email: contact@eastandlaw.com | <i class="fas fa-phone"></i> Телефон: +1 234 567 890</p>
+            <a href="mailto:contact@eastandlaw.com" class="cta-button">Отправить сообщение</a>
+        </div>
+        <div class="lang-uz">
+            <h2>Biz bilan bog'laning</h2>
+            <p><i class="fas fa-envelope"></i> Email: contact@eastandlaw.com | <i class="fas fa-phone"></i> Telefon: +1 234 567 890</p>
+            <a href="mailto:contact@eastandlaw.com" class="cta-button">Xabar yuborish</a>
+        </div>
+        <div class="lang-zh">
+            <h2>联系我们</h2>
+            <p><i class="fas fa-envelope"></i> 邮箱: contact@eastandlaw.com | <i class="fas fa-phone"></i> 电话: +1 234 567 890</p>
+            <a href="mailto:contact@eastandlaw.com" class="cta-button">发送消息</a>
+        </div>
+    </section>
+    <a href="#contact" class="fixed-cta lang-en">Get in Touch</a>
+    <a href="#contact" class="fixed-cta lang-ru">Связаться</a>
+    <a href="#contact" class="fixed-cta lang-uz">Bog'lanish</a>
+    <a href="#contact" class="fixed-cta lang-zh">联系我们</a>
+    <div class="chatbot">
+        <button class="chatbot-toggle" onclick="toggleChatbot()"><i class="fas fa-robot"></i></button>
+        <div class="chatbot-window">
+            <div class="chatbot-header lang-en">East & Law Assistant</div>
+            <div class="chatbot-header lang-ru">Помощник Восток и Право</div>
+            <div class="chatbot-header lang-uz">Sharq va Huquq yordamchisi</div>
+            <div class="chatbot-header lang-zh">东与法助手</div>
+            <div class="chatbot-content lang-en">
+                <div class="chatbot-question" onclick="toggleAnswer(this)">What services do you offer?</div>
+                <div class="chatbot-answer">We specialize in corporate law, international arbitration, and strategic consulting for global clients.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">How can I contact you?</div>
+                <div class="chatbot-answer">Reach us at contact@eastandlaw.com or +1 234 567 890.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Do you handle international cases?</div>
+                <div class="chatbot-answer">Yes, we excel in cross-border mergers, arbitrations, and trade agreements.</div>
+            </div>
+            <div class="chatbot-content lang-ru">
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Какие услуги вы предлагаете?</div>
+                <div class="chatbot-answer">Мы специализируемся на корпоративном праве, международном арбитраже и стратегическом консультировании для глобальных клиентов.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Как с вами связаться?</div>
+                <div class="chatbot-answer">Свяжитесь с нами по адресу contact@eastandlaw.com или по телефону +1 234 567 890.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Занимаетесь ли вы международными делами?</div>
+                <div class="chatbot-answer">Да, мы преуспеваем в трансграничных слияниях, арбитражах и торговых соглашениях.</div>
+            </div>
+            <div class="chatbot-content lang-uz">
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Qanday xizmatlar taqdim etasiz?</div>
+                <div class="chatbot-answer">Biz global mijozlar uchun korporativ huquq, xalqaro arbitraj va strategik maslahatlarga ixtisoslashganmiz.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Siz bilan qanday bog'lanish mumkin?</div>
+                <div class="chatbot-answer">Bizga contact@eastandlaw.com yoki +1 234 567 890 orqali murojaat qiling.</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">Xalqaro ishlarni ko'rib chiqasizmi?</div>
+                <div class="chatbot-answer">Ha, biz transchegaraviy birlashmalar, arbitrajlar va savdo shartnomalarida muvaffaqiyat qozonamiz.</div>
+            </div>
+            <div class="chatbot-content lang-zh">
+                <div class="chatbot-question" onclick="toggleAnswer(this)">您提供哪些服务？</div>
+                <div class="chatbot-answer">我们专注于为全球客户提供公司法、国际仲裁和战略咨询服务。</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">我如何联系您？</div>
+                <div class="chatbot-answer">请通过 contact@eastandlaw.com 或 +1 234 567 890 联系我们。</div>
+                <div class="chatbot-question" onclick="toggleAnswer(this)">您处理国际案件吗？</div>
+                <div class="chatbot-answer">是的，我们在跨境合并、仲裁和贸易协议方面表现出色。</div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="social-media">
+            <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-weixin"></i></a>
+        </div>
+        <div class="footer-links lang-en">
+            <a href="#">Contact</a> | <a href="#">Subscribe</a> | <a href="#">Legal</a> |
+            <a href="#">Privacy Policy</a> | <a href="#">Modern Slavery Statement</a> | <a href="#">Remote Access</a>
+        </div>
+        <div class="footer-links lang-ru">
+            <a href="#">Контакты</a> | <a href="#">Подписаться</a> | <a href="#">Юридическая информация</a> |
+            <a href="#">Политика конфиденциальности</a> | <a href="#">Заявление о современном рабстве</a> | <a href="#">Удаленный доступ</a>
+        </div>
+        <div class="footer-links lang-uz">
+            <a href="#">Aloqa</a> | <a href="#">Obuna bo'lish</a> | <a href="#">Huquqiy ma'lumot</a> |
+            <a href="#">Maxfiylik siyosati</a> | <a href="#">Zamonaviy qullik deklaratsiyasi</a> | <a href="#">Masofaviy kirish</a>
+        </div>
+        <div class="footer-links lang-zh">
+            <a href="#">联系我们</a> | <a href="#">订阅</a> | <a href="#">法律信息</a> |
+            <a href="#">隐私政策</a> | <a href="#">现代奴隶制声明</a> | <a href="#">远程访问</a>
+        </div>
+        <div class="footer-copyright lang-en">©East & Law LLP 1996-2025<br>Attorney Advertising. Prior results do not guarantee a similar outcome.</div>
+        <div class="footer-copyright lang-ru">©East & Law LLP 1996-2025<br>Юридическая реклама. Предыдущие результаты не гарантируют аналогичный исход.</div>
+        <div class="footer-copyright lang-uz">©East & Law LLP 1996-2025<br>Advokat reklama. Oldingi natijalar o'xshash natijani kafolatlamaydi.</div>
+        <div class="footer-copyright lang-zh">©East & Law LLP 1996-2025<br>律师广告。过往成绩不保证类似结果。</div>
+    </footer>
+    <script>
+        function setLanguage(lang) {
+            document.body.className = lang;
+            document.querySelectorAll('.footer-links').forEach(link => link.style.display = 'none');
+            document.querySelector(`.footer-links.lang-${lang}`).style.display = 'block';
+            document.querySelectorAll('.footer-copyright').forEach(copyright => copyright.style.display = 'none');
+            document.querySelector(`.footer-copyright.lang-${lang}`).style.display = 'block';
+            document.querySelectorAll('.fixed-cta').forEach(cta => cta.style.display = 'none');
+            document.querySelector(`.fixed-cta.lang-${lang}`).style.display = 'block';
+            document.querySelectorAll('.chatbot-content').forEach(content => content.style.display = 'none');
+            document.querySelector(`.chatbot-content.lang-${lang}`).style.display = 'block';
+            document.querySelectorAll('.chatbot-header').forEach(header => header.style.display = 'none');
+            document.querySelector(`.chatbot-header.lang-${lang}`).style.display = 'block';
+        }
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        }
+
+        function toggleChatbot() {
+            const chatbotWindow = document.querySelector('.chatbot-window');
+            chatbotWindow.classList.toggle('active');
+        }
+
+        function toggleAnswer(element) {
+            const answer = element.nextElementSibling;
+            answer.classList.toggle('active');
+        }
+
+        function filterPeople() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const serviceFilter = document.getElementById('serviceFilter').value;
+            const roleFilter = document.getElementById('roleFilter').value;
+            const locationFilter = document.getElementById('locationFilter').value;
+            const languageFilter = document.getElementById('languageFilter').value;
+            const peopleGrid = document.getElementById('peopleGrid');
+            const peopleCards = peopleGrid.getElementsByClassName('person-card');
+            let visibleCount = 0;
+
+            for (let i = 0; i < peopleCards.length; i++) {
+                const card = peopleCards[i];
+                const name = card.querySelector('h3').textContent.toLowerCase();
+                const service = card.getAttribute('data-service');
+                const role = card.getAttribute('data-role');
+                const location = card.getAttribute('data-location');
+                const language = card.getAttribute('data-language');
+
+                const matchesSearch = name.includes(searchInput);
+                const matchesService = !serviceFilter || service === serviceFilter;
+                const matchesRole = !roleFilter || role === roleFilter;
+                const matchesLocation = !locationFilter || location === locationFilter;
+                const matchesLanguage = !languageFilter || language === languageFilter;
+
+                if (matchesSearch && matchesService && matchesRole && matchesLocation && matchesLanguage) {
+                    card.style.display = 'grid';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+
+            document.getElementById('resultsInfo').textContent = `${visibleCount} results | Relevance | Alphabetical`;
+        }
+
+        function sortResults(method) {
+            const peopleGrid = document.getElementById('peopleGrid');
+            const peopleCards = Array.from(peopleGrid.getElementsByClassName('person-card'));
+            peopleCards.sort((a, b) => {
+                const nameA = a.querySelector('h3').textContent.toLowerCase();
+                const nameB = b.querySelector('h3').textContent.toLowerCase();
+                return method === 'alphabetical' ? nameA.localeCompare(nameB) : 0;
+            });
+            peopleCards.forEach(card => peopleGrid.appendChild(card));
+        }
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('h2, p, img, .cta-button, .case-card, .service-card, .quote, .person-card').forEach(el => {
+                        el.classList.add('visible');
+                    });
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        setLanguage('en');
+        filterPeople();
+    </script>
+</body>
+</html>
